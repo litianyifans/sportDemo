@@ -1,3 +1,4 @@
+import com.alibaba.fastjson.JSONObject;
 import org.apache.http.*;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.HttpClient;
@@ -27,9 +28,7 @@ import java.io.*;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,8 +43,9 @@ public class SportTest1 {
         //getMs();
         //getItemList();
         //getdateListByItemId("32");
-        //gettimePeriodByIdAndDay("32","2020/01/02") ;
-        testMain();
+        //getTimePeriodByIdAndDay("32","2020/01/02") ;
+        getRelayPeriodByIdAndDay("32","2020/01/02") ;
+        //testMain();
     }
 
     public static void testMain() throws Exception {
@@ -105,34 +105,66 @@ public class SportTest1 {
     /*
       获取活动项目
    */
-    public static void getItemList() throws IOException, URISyntaxException, ClassNotFoundException {
+    public static List<Map<String,String>> getItemList() throws IOException, URISyntaxException, ClassNotFoundException {
         //sendRequestGet(null, null, null);
         //sendRequestGet("http://www.zhtyzx.cn/zhh_sports/index.jsp", null, null);
         List<Header> headerList = addPostHeader();
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         String sResult = sendRequestPost("http://www.zhtyzx.cn/zhh_sports/item-listItem.action",headerList,params,null);
-        System.out.println(sResult);
+        Map stringToMap =  JSONObject.parseObject(sResult);
+        List<JSONObject> objs = (List<JSONObject>)  ((Map)stringToMap.get("__result__")).get("data");
+        List results = new ArrayList() ;
+        for (JSONObject obj : objs){
+                Map<String,String>  map = new HashMap<String, String>() ;
+                map.put("id",obj.getString("id")) ;
+                map.put("itemName",obj.getString("itemName")) ;
+                results.add(map) ;
+        }
+        return  results ;
     }
     /*
        获取订票日期
     */
-    public static void getdateListByItemId(String id) throws IOException, URISyntaxException, ClassNotFoundException {
+    public static HashMap<String,List<JSONObject>> getdateListByItemId(String id) throws IOException, URISyntaxException, ClassNotFoundException {
         List<Header> headerList = addPostHeader();
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("itemid", id)) ;
         String sResult = sendRequestPost("http://www.zhtyzx.cn/zhh_sports/commonConfig-dateListByItemId.action",headerList,params,null);
-        System.out.println(sResult);
+        Map stringToMap =  JSONObject.parseObject(sResult);
+        List<JSONObject> objs = (List<JSONObject>)  ((Map)stringToMap.get("__result__")).get("data");
+        HashMap<String,List<JSONObject>> result = new HashMap<String, List<JSONObject>>() ;
+        result.put("dates",(List<JSONObject>) objs.get(0)) ;
+        result.put("xinqi",(List<JSONObject>) objs.get(1)) ;
+        result.put("flag",(List<JSONObject>) objs.get(2)) ;
+        return result ;
     }
+
     /*
-        查看剩余时间
-     */
-    public static void gettimePeriodByIdAndDay(String id,String day) throws IOException, URISyntaxException, ClassNotFoundException {
+      获取余票信息
+   */
+    public static HashMap<String,Object> getTimePeriodByIdAndDay(String id,String day) throws IOException, URISyntaxException, ClassNotFoundException {
         List<Header> headerList = addPostHeader();
         List<NameValuePair> params = new ArrayList<NameValuePair>();
         params.add(new BasicNameValuePair("itemid", id)) ;
         params.add(new BasicNameValuePair("itemday", day)) ;
         String sResult = sendRequestPost("http://www.zhtyzx.cn/zhh_sports/commonConfig-timePeriod.action",headerList,params,null);
+        Map stringToMap =  JSONObject.parseObject(sResult);
+        JSONObject objs = (JSONObject) ((Map)stringToMap.get("__result__")).get("data");
+        HashMap<String,Object> result = new HashMap<String, Object>() ;
+        result.put("ts",objs.getString("ts")) ;
+        result.put("timeList",objs.getString("timeList")) ;
+        result.put("siteTimeList",objs.getString("siteTimeList")) ;
+        result.put("siteList",objs.getString("siteList")) ;
         System.out.println(sResult);
+        return result ;
+    }
+    /*
+        查看剩余时间
+     */
+    public static Long getRelayPeriodByIdAndDay(String id,String day) throws IOException, URISyntaxException, ClassNotFoundException {
+        HashMap<String, Object> result = getTimePeriodByIdAndDay(id,day) ;
+        long time = Long.valueOf((String) result.get("ts")) ;
+        return time ;
     }
     /*
        获取图片校验码
@@ -144,12 +176,9 @@ public class SportTest1 {
         Long date = new Date().getTime();
         loginNV.add(new BasicNameValuePair("r", "" + date));
         String url = "http://www.zhtyzx.cn/zhh_sports/orderTicket-getRand.action?r=" + date;
-
         String result = sendRequestPost(url, headerList, loginNV, null);
-
         String imgCode = result.substring(13, 17);
         url = "http://www.zhtyzx.cn/zhh_sports/view/item/image.jsp?strRand=" + imgCode;
-
         sendRequestGet(url, null, null);
         return imgCode;
     }
