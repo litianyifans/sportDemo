@@ -38,27 +38,28 @@ public class SportTest1 {
 
     public static CookieStore cookieStores = null;
 
-    public static String codeUrl = "https://www.materialtools.com/SMSContent/18";
+    public static String codeUrl = "https://www.materialtools.com/SMSContent/17";
 
     public static void main(String[] args) throws Exception {
         //getMs();
         //getItemList();
-        //getdateListByItemId("30");
-        //gettimePeriodByIdAndDay("30","2019/12/31") ;
+        //getdateListByItemId("32");
+        //gettimePeriodByIdAndDay("32","2020/01/02") ;
+        testMain();
     }
 
     public static void testMain() throws Exception {
-        String mobileNo = "13928092054";
-        String idCard = "";
-        String name = "";
-        String groupName = "游泳";
-        String actDate = "2020-01-04";
-        String startStr = "15:00";
-        String endStr = "19:00";
+        String mobileNo = "17109324212";
+        String idCard = "530121197006145263";
+        String name = "孟丹红";
+        String groupName = "保龄球";
+        String actDate = "2020-01-02";
+        String startStr = "18:00";
+        String endStr = "22:00";
         String startTime = URLtoUTF8.toUtf8String(startStr);
         String endTime = URLtoUTF8.toUtf8String(endStr);
-        String groundId = "100354";
-        String itemId = "31";
+        String groundId = "100476";
+        String itemId = "32";
         sendRequestGet(null, null, null);
         sendRequestGet("http://www.zhtyzx.cn/zhh_sports/index.jsp", null, null);
         String verifyCode = getVerifyCode();
@@ -90,6 +91,11 @@ public class SportTest1 {
                     "&rand=&orderTicket.mobile=" + mobileNo +
                     "&orderTicket.mobileCheckCode=" + messageCode.trim();
             String sResult = sendRequestPost("http://www.zhtyzx.cn/zhh_sports/orderTicket-saveOrderTicket.action", headerList, ticks, str);
+            //if("1" != messageSwitch){
+            //					$("#voucherCode").html("<p></p>手机凭证号为："+orderTicket.voucherCode+"，已发送至"+orderTicket.mobile+"手机号码中，请注意查收！");
+            //				}else{
+            //					$("#voucherCode").html("<p></p>凭证号为："+orderTicket.voucherCode+"！");
+            //				}
             System.out.println(getLoginCode());
             System.out.println("end");
         }
